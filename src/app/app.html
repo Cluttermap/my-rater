@@ -93,11 +93,12 @@
     <div class="app-tabs">
       <button class="app-tab" [class.active]="activeTab() === 'rate'" (click)="setTab('rate')" type="button">Rate</button>
       <button class="app-tab" [class.active]="activeTab() === 'results'" (click)="setTab('results')" type="button">📊 Results</button>
+      <button class="app-tab" [class.active]="activeTab() === 'goat'" (click)="setTab('goat')" type="button">🐐 Fuck a Goat</button>
     </div>
 
     <!-- Tab: Rate -->
     @if (activeTab() === 'rate') {
-      <p class="rate-prompt">Select/Put the shit to rate</p>
+      <p class="rate-prompt">Select the shit to rate</p>
 
       <div class="mode-selection">
         <button class="mode-button" [class.active]="inputMode() === 'social'" (click)="setInputMode('social')" [disabled]="isLoading()" type="button">
@@ -220,12 +221,48 @@
       </div>
     }
 
+    <!-- Tab: Goat -->
+    @if (activeTab() === 'goat') {
+      <div class="goat-scene"
+           [class.goat-hiding]="goatPhase() === 'hiding'"
+           [class.goat-bang]="goatPhase() === 'bang'"
+           [class.goat-returning]="goatPhase() === 'returning'"
+           (click)="triggerGoat()">
+        <!-- Fence overlay (sits ON TOP of characters via z-index) -->
+        <div class="goat-fence">
+          <div class="fence-post" style="left:5%"></div>
+          <div class="fence-post" style="left:22%"></div>
+          <div class="fence-post" style="left:39%"></div>
+          <div class="fence-post" style="left:56%"></div>
+          <div class="fence-post" style="left:73%"></div>
+          <div class="fence-post" style="left:90%"></div>
+          <div class="fence-rail fence-rail-top"></div>
+          <div class="fence-rail fence-rail-bottom"></div>
+        </div>
+        <!-- Farmer -->
+        <div class="goat-farmer">👨‍🌾</div>
+        <!-- Goat (flipped to face left) -->
+        <div class="goat-goat">🐐</div>
+        <!-- BANG bubble -->
+        <div class="bang-bubble">BANG!</div>
+        <!-- Click hint -->
+        @if (goatPhase() === 'idle') {
+          <div class="goat-hint">tap to see what happens</div>
+        }
+      </div>
+    }
+
     @if (activeTab() === 'rate') {
       @if (errorMessage() && !isLoading()) {
         <div class="error-message">{{ errorMessage() }}</div>
       }
       @if (isLoading()) {
-        <div class="loading-container"><div class="spinner"></div></div>
+        <div class="loading-container">
+          <div class="spinner"></div>
+          @if (inputMode() === 'social' && selectedSocial()) {
+            <p class="loading-social-text">About to share from {{ selectedSocial() }} ya?</p>
+          }
+        </div>
       }
       @if (rate() && !isLoading() && !errorMessage()) {
         <div class="rate-display">

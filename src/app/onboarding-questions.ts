@@ -41,5 +41,6 @@ export const ONBOARDING_SUMMARY_TEXTS = [
   'What a proper LOSER you are says your answers',
   'It seems based on your answers that you SUCK BALLS',
   'Jeez, you are really just a CUNT judging by your answers',
+  'Sucessfully determined that you are a COMPLETE AND UTTER FUCKING TWAT',
   'Pfff I fink it wasnt worf taking the quizz cause you are nofin but a CRAP SUCKING LITTLE NIPPA',
 ];

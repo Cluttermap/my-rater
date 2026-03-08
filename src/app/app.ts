@@ -50,7 +50,8 @@ export class App {
   protected rate = signal<'High' | 'Medium' | 'Low' | null>(null);
   protected rateExplanation = signal<string | null>(null);
   protected errorMessage = signal<string | null>(null);
-  protected activeTab = signal<'rate' | 'results'>('rate');
+  protected activeTab = signal<'rate' | 'results' | 'goat'>('rate');
+  protected goatPhase = signal<'idle' | 'hiding' | 'bang' | 'returning'>('idle');
   protected allUsersRatings = signal<Record<string, UserRatings>>({});
   protected readonly allUsersList = computed(() =>
     Object.entries(this.allUsersRatings()).map(([name, ratings], i) => ({
@@ -99,6 +100,149 @@ export class App {
       'this restored a small but meaningful piece of my faith in the internet',
       "genuinely good, and I don't say that lightly because I say it never",
     ]
+  };
+
+  private readonly socialRateExplanations: Record<string, { Low: string[]; Medium: string[]; High: string[] }> = {
+    Facebook: {
+      Low:    [
+        "Wow how fucking stupid is it to share something from Facebook you dumb bitch.",
+        "Holy shit this Facebook garbage smells like a 2012 meme dumpster fire.",
+      ],
+      Medium: [
+        "Well it ain't the absolute shittiest thing to share a Facebook post I guess.",
+        "It's still Facebook crap, but at least it's not the worst shit on the internet.",
+      ],
+      High:   [
+        "Yeah okay share that Facebook crap you idiot, maybe someone will give a shit.",
+        "Fine drop the Facebook post here, maybe this old-ass platform produced something not totally shitty.",
+      ],
+    },
+    Instagram: {
+      Low:    [
+        "Jesus Christ sharing Instagram posts in chat again you basic dumbass.",
+        "Jesus fucking Christ another fake-ass Instagram post full of filters and bullshit.",
+      ],
+      Medium: [
+        "Well at least it's not the worst shit to drop an Instagram post here.",
+        "It's still influencer nonsense but it's not the most unbearable shit.",
+      ],
+      High:   [
+        "Fine go ahead and share your Instagram bullshit you attention-seeking idiot.",
+        "Alright share the Instagram crap, maybe the algorithm spat out something halfway decent.",
+      ],
+    },
+    X: {
+      Low:    [
+        "You fucking cunt, sharing something from X huh? What kind of chronically online bullshit is that.",
+        "Dick head, this X post looks like pure rage-bait bullshit from the deepest pit of the internet.",
+      ],
+      Medium: [
+        "Bitch head, It's not the most garbage thing to share an X post I suppose.",
+        "It's still chaotic X nonsense but it's not the dumbest shit ever written.",
+      ],
+      High:   [
+        "Yeah alright drop that X post here you loudmouth idiot.",
+        "Go ahead share the X post, maybe the dumpster fire produced a funny spark.",
+      ],
+    },
+    TikTok: {
+      Low:    [
+        "Oh great another brain-rotting TikTok you absolute clown.",
+        "This TikTok looks like brain-melting bullshit made for goldfish attention spans.",
+      ],
+      Medium: [
+        "Well it's not the worst crap to share a TikTok I guess.",
+        "It's still dopamine-fried TikTok garbage but it's tolerable I guess.",
+      ],
+      High:   [
+        "Fine share the damn TikTok you dopamine-fried idiot.",
+        "Fine share the TikTok, maybe it's one of the rare ones that doesn't suck absolute ass.",
+      ],
+    },
+    Snapchat: {
+      Low:    [
+        "You're really sharing Snapchat shit in a group chat? What the hell is wrong with you.",
+        "What the fuck is this Snapchat nonsense, some disappearing bullshit nobody asked for.",
+      ],
+      Medium: [
+        "Okay it's not the dumbest thing to share a Snapchat post I suppose.",
+        "It's still pointless Snapchat crap but it's not completely unbearable.",
+      ],
+      High:   [
+        "Yeah sure throw that Snapchat nonsense in here you chaotic bastard.",
+        "Sure share the Snapchat thing, maybe the chaos will entertain someone for five seconds.",
+      ],
+    },
+    Reddit: {
+      Low:    [
+        "Sharing Reddit posts like some basement goblin again you nerd.",
+        "This Reddit post reeks of basement-dwelling keyboard-warrior bullshit.",
+      ],
+      Medium: [
+        "Well it ain't the worst garbage to share a Reddit post I guess.",
+        "It's still classic Reddit nonsense but at least it's not peak cringe.",
+      ],
+      High:   [
+        "Alright fine share the Reddit crap you smug little bastard.",
+        "Fine share the Reddit post, maybe the hive mind produced something funny.",
+      ],
+    },
+    Tumblr: {
+      Low:    [
+        "Tumblr? Are you fucking serious right now you dramatic weirdo.",
+        "This Tumblr post is dramatic internet chaos wrapped in ten layers of bullshit.",
+      ],
+      Medium: [
+        "Well it's not the absolute worst place to share something from I guess.",
+        "It's weird Tumblr energy but not the worst crap floating online.",
+      ],
+      High:   [
+        "Fine drop the Tumblr post you chaotic little gremlin.",
+        "Alright share the Tumblr post, maybe the weirdness will actually be funny.",
+      ],
+    },
+    Pinterest: {
+      Low:    [
+        "Pinterest? What the hell is this craft-store bullshit you moron.",
+        "What the hell is this Pinterest DIY bullshit, glitter-glued garbage again.",
+      ],
+      Medium: [
+        "Okay it's not the most terrible crap to share from Pinterest.",
+        "It's still Pinterest craft nonsense but it's not the worst shit imaginable.",
+      ],
+      High:   [
+        "Yeah whatever share the Pinterest nonsense you DIY disaster.",
+        "Fine share the Pinterest thing, maybe the internet glue factory made something cool.",
+      ],
+    },
+    LinkedIn: {
+      Low:    [
+        "Oh wow a LinkedIn post, what are you gonna motivate us to death you corporate clown.",
+        "This LinkedIn post smells like corporate motivational bullshit and fake hustle.",
+      ],
+      Medium: [
+        "Well it's not the worst thing to share a LinkedIn post I guess.",
+        "It's still cringe business nonsense but it's not the most painful thing.",
+      ],
+      High:   [
+        "Fine go ahead share that LinkedIn hustle crap you business guru idiot.",
+        "Go ahead share the LinkedIn post, maybe the corporate robots wrote something funny.",
+      ],
+    },
+    Threads: {
+      Low:    [
+        "Threads? Seriously? That app is barely alive you desperate fool.",
+        "This Threads post feels like leftover social media bullshit nobody wanted.",
+      ],
+      Medium: [
+        "Well it's not the worst garbage to share a Threads post I guess.",
+        "It's still Threads chaos but at least it's not completely useless.",
+      ],
+      High:   [
+        "Alright drop the Threads post here you social media addict.",
+        "Fine share the Threads post, maybe the dying platform accidentally made something good.",
+      ],
+    },
   };
 
   constructor() {
@@ -215,8 +359,16 @@ export class App {
     this.errorMessage.set(null);
   }
 
-  protected setTab(tab: 'rate' | 'results'): void {
+  protected setTab(tab: 'rate' | 'results' | 'goat'): void {
     this.activeTab.set(tab);
+  }
+
+  protected triggerGoat(): void {
+    if (this.goatPhase() !== 'idle') return;
+    this.goatPhase.set('hiding');
+    setTimeout(() => this.goatPhase.set('bang'), 900);
+    setTimeout(() => this.goatPhase.set('returning'), 1900);
+    setTimeout(() => this.goatPhase.set('idle'), 2700);
   }
 
   protected async getRate(): Promise<void> {
@@ -248,8 +400,11 @@ export class App {
     setTimeout(async () => {
       const rates: ('High' | 'Medium' | 'Low')[] = ['High', 'Medium', 'Low'];
       const selectedRate = rates[Math.floor(Math.random() * rates.length)];
-      const explanations = this.rateExplanations[selectedRate];
-      const selectedExplanation = explanations[Math.floor(Math.random() * explanations.length)];
+      const platform = this.inputMode() === 'social' ? this.selectedSocial() : null;
+      const explanationPool = platform && this.socialRateExplanations[platform]
+        ? this.socialRateExplanations[platform][selectedRate]
+        : this.rateExplanations[selectedRate];
+      const selectedExplanation = explanationPool[Math.floor(Math.random() * explanationPool.length)];
 
       this.rate.set(selectedRate);
       this.rateExplanation.set(selectedExplanation);
