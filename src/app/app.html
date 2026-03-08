@@ -1,107 +1,248 @@
 <main class="main">
-  <div class="url-rater-container">
-    <h1 class="url-rater-title">URL Rater</h1>
 
-    <div class="mode-selection">
-      <button
-        class="mode-button"
-        [class.active]="inputMode() === 'url'"
-        (click)="setInputMode('url')"
-        [disabled]="isLoading()"
-        type="button"
-      >
-        🔗 URL
-      </button>
-      <button
-        class="mode-button"
-        [class.active]="inputMode() === 'text'"
-        (click)="setInputMode('text')"
-        [disabled]="isLoading()"
-        type="button"
-      >
-        📝 Free Text
+  @if (auth.currentUser() === undefined) {
+    <div class="auth-loading">
+      <div class="spinner"></div>
+    </div>
+  } @else if (auth.currentUser() === null) {
+    <div class="auth-screen">
+      <h1 class="url-rater-title auth-title">Share Rater</h1>
+      <p class="auth-subtitle">Sign in to start rating your shares</p>
+      <button class="google-signin-btn" (click)="auth.signInWithGoogle()" type="button">
+        <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Sign in with Google
       </button>
     </div>
+  } @else if (onboardingDone() === false) {
+    <div class="onboarding-screen">
+      <h1 class="url-rater-title onboarding-title">Share Rater</h1>
 
-    <div class="input-group">
-      @if (inputMode() === 'url') {
-        <input
-          type="text"
-          class="url-input"
-          placeholder="Paste your URL here..."
-          [(ngModel)]="inputText"
-          [disabled]="isLoading()"
-          (keyup.enter)="getRate()"
-        />
+      @if (onboardingShowSummary()) {
+        <!-- Summary screen -->
+        <div class="onboarding-eval-box">
+          <span class="onboarding-eval-big">{{ onboardingTyped() }}</span><span class="onboarding-cursor" [class.hidden]="onboardingTypingDone()">|</span>
+        </div>
+        <div class="onboarding-summary">
+          @for (q of onboardingQuestions; track q.id) {
+            <div class="summary-row">
+              <span class="summary-q">{{ q.question }}</span>
+              <span class="summary-a">{{ onboardingAnswers()[q.id] }}</span>
+            </div>
+          }
+        </div>
+        @if (onboardingTypingDone()) {
+          <button class="onboarding-answer-btn onboarding-finish-btn" (click)="finishOnboarding()" type="button">
+            Let's go
+          </button>
+        }
       } @else {
-        <textarea
-          class="text-input"
-          placeholder="Enter your text here..."
-          [(ngModel)]="inputText"
-          [disabled]="isLoading()"
-          rows="4"
-        ></textarea>
+        <!-- Question screen -->
+        <div class="onboarding-progress">
+          @for (q of onboardingQuestions; track q.id; let i = $index) {
+            <div class="onboarding-dot" [class.active]="i === onboardingStep()" [class.done]="i < onboardingStep()"></div>
+          }
+        </div>
+        @if (currentIntro(); as intro) {
+          <p class="onboarding-intro">{{ intro }}</p>
+        }
+        <h2 class="onboarding-question">{{ onboardingQuestions[onboardingStep()].question }}</h2>
+        <div class="onboarding-answers">
+          @for (answer of onboardingQuestions[onboardingStep()].answers; track answer) {
+            <button class="onboarding-answer-btn" (click)="answerQuestion(answer)" type="button">
+              {{ answer }}
+            </button>
+          }
+        </div>
       }
+    </div>
+
+  } @else if (onboardingDone() === true && showWelcome()) {
+    <div class="welcome-screen">
+      @for (sentence of welcomeSentences; track $index; let i = $index) {
+        @if (welcomeStep() >= i) {
+          <p class="welcome-sentence" [class.welcome-headline]="i === 0">{{ sentence }}</p>
+        }
+      }
+      @if (welcomeStep() >= welcomeSentences.length) {
+        <button class="welcome-got-it-btn" (click)="finishWelcome()" type="button">Got it</button>
+      }
+    </div>
+
+  } @else if (onboardingDone() === true && !showWelcome()) {
+
+  <div class="user-corner">
+    <span class="user-corner-name">👋 {{ auth.currentUser()?.displayName }}</span>
+    <button class="retake-btn" (click)="retakeOnboarding()" type="button">↺ retake quiz</button>
+  </div>
+
+  <div class="url-rater-container">
+    <h1 class="url-rater-title">
+      Share Rater
+      <span class="help-icon-wrapper">
+        <button class="help-icon" type="button">?</button>
+        <div class="help-tooltip">So that we never have to click on, read, see your Low-rated shares</div>
+      </span>
+    </h1>
+
+    <!-- Tab bar -->
+    <div class="app-tabs">
+      <button class="app-tab" [class.active]="activeTab() === 'rate'" (click)="setTab('rate')" type="button">Rate</button>
+      <button class="app-tab" [class.active]="activeTab() === 'results'" (click)="setTab('results')" type="button">📊 Results</button>
+    </div>
+
+    <!-- Tab: Rate -->
+    @if (activeTab() === 'rate') {
+      <p class="rate-prompt">Select/Put the shit to rate</p>
+
+      <div class="mode-selection">
+        <button class="mode-button" [class.active]="inputMode() === 'social'" (click)="setInputMode('social')" [disabled]="isLoading()" type="button">
+          📱 Social
+        </button>
+        <button class="mode-button" [class.active]="inputMode() === 'text'" (click)="setInputMode('text')" [disabled]="isLoading()" type="button">
+          📝 Free Text
+        </button>
+        <button class="mode-button" [class.active]="inputMode() === 'url'" (click)="setInputMode('url')" [disabled]="isLoading()" type="button">
+          🔗 URL
+        </button>
+      </div>
+
+      @if (inputMode() === 'social') {
+        <div class="social-grid">
+          @for (p of socialPlatforms; track p.id) {
+            <button
+              class="social-btn"
+              [class.selected]="selectedSocial() === p.name"
+              (click)="selectSocial(p.name)"
+              [disabled]="isLoading()"
+              type="button"
+              [title]="p.name"
+            >
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="social-icon" [style.fill]="selectedSocial() === p.name ? 'white' : p.color">
+                <path [attr.d]="p.svgPath"/>
+              </svg>
+              <span class="social-name">{{ p.name }}</span>
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="input-group">
+          @if (inputMode() === 'url') {
+            <input
+              type="text"
+              class="url-input"
+              placeholder="Paste your URL here..."
+              [(ngModel)]="inputText"
+              [disabled]="isLoading()"
+              (keyup.enter)="getRate()"
+            />
+          } @else {
+            <textarea
+              class="text-input"
+              placeholder="Enter your stupid share here..."
+              [(ngModel)]="inputText"
+              [disabled]="isLoading()"
+              rows="4"
+            ></textarea>
+          }
+        </div>
+      }
+
       <button
         class="rate-button"
+        style="width: 100%; margin-bottom: 1.5rem;"
         (click)="getRate()"
-        [disabled]="isLoading() || !inputText() || !selectedUser()"
+        [disabled]="isLoading() || (inputMode() === 'social' ? !selectedSocial() : !inputText())"
       >
         Get Rate
       </button>
-    </div>
+    }
 
-    <div class="user-selection">
-      @for (user of users; track user.id) {
-        <div class="user-option">
-          <button
-            class="user-circle"
-            [class.selected]="selectedUser() === user.id"
-            (click)="selectUser(user.id)"
-            [disabled]="isLoading()"
-            type="button"
-          >
-            <span class="user-avatar">{{ user.avatar }}</span>
-          </button>
-          <div class="user-name">{{ user.name }}</div>
+    <!-- Tab: Results -->
+    @if (activeTab() === 'results') {
+      <div class="results-panel">
+        <div class="results-columns">
+          @if (allUsersList().length === 0) {
+            <div class="result-empty" style="width:100%">No ratings yet</div>
+          }
+          @for (user of allUsersList(); track user.name) {
+            <div class="result-column">
+              <div class="result-bar">
+                @if (totalRatingsFor(user.name) === 0) {
+                  <div class="result-empty">No ratings</div>
+                } @else {
+                  @if (user.ratings.High.count > 0) {
+                    <div class="result-segment seg-high" [style.flex]="user.ratings.High.count">
+                      <span class="seg-count">{{ user.ratings.High.count }}</span>
+                      <div class="seg-tooltip">
+                        @for (text of user.ratings.High.texts; track $index) {
+                          <div class="seg-tooltip-item">{{ text }}</div>
+                        }
+                      </div>
+                    </div>
+                  }
+                  @if (user.ratings.Medium.count > 0) {
+                    <div class="result-segment seg-medium" [style.flex]="user.ratings.Medium.count">
+                      <span class="seg-count">{{ user.ratings.Medium.count }}</span>
+                      <div class="seg-tooltip">
+                        @for (text of user.ratings.Medium.texts; track $index) {
+                          <div class="seg-tooltip-item">{{ text }}</div>
+                        }
+                      </div>
+                    </div>
+                  }
+                  @if (user.ratings.Low.count > 0) {
+                    <div class="result-segment seg-low" [style.flex]="user.ratings.Low.count">
+                      <span class="seg-count">{{ user.ratings.Low.count }}</span>
+                      <div class="seg-tooltip">
+                        @for (text of user.ratings.Low.texts; track $index) {
+                          <div class="seg-tooltip-item">{{ text }}</div>
+                        }
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+              <div class="result-user-avatar">{{ user.avatar }}</div>
+              <div class="result-user-name">{{ user.name }}</div>
+            </div>
+          }
+        </div>
+        <div class="results-legend">
+          <span class="legend-high">■ High</span>
+          <span class="legend-medium">■ Medium</span>
+          <span class="legend-low">■ Low</span>
+        </div>
+      </div>
+    }
+
+    @if (activeTab() === 'rate') {
+      @if (errorMessage() && !isLoading()) {
+        <div class="error-message">{{ errorMessage() }}</div>
+      }
+      @if (isLoading()) {
+        <div class="loading-container"><div class="spinner"></div></div>
+      }
+      @if (rate() && !isLoading() && !errorMessage()) {
+        <div class="rate-display">
+          <div class="rate-label">Rating Result:</div>
+          <div class="rate-value" [ngClass]="{'rate-high': rate() === 'High', 'rate-medium': rate() === 'Medium', 'rate-low': rate() === 'Low'}">
+            {{ rate() }}
+          </div>
+          @if (rateExplanation()) {
+            <div class="rate-explanation">{{ rateExplanation() }}</div>
+          }
         </div>
       }
-    </div>
-
-    @if (errorMessage() && !isLoading()) {
-      <div class="error-message">
-        {{ errorMessage() }}
-      </div>
-    }
-
-    @if (isLoading()) {
-      <div class="loading-container">
-        <div class="spinner"></div>
-      </div>
-    }
-
-    @if (rate() && !isLoading() && !errorMessage()) {
-      <div class="rate-display">
-        <div class="rate-label">Rating Result:</div>
-        <div
-          class="rate-value"
-          [ngClass]="{
-            'rate-high': rate() === 'High',
-            'rate-medium': rate() === 'Medium',
-            'rate-low': rate() === 'Low'
-          }"
-        >
-          {{ rate() }}
-        </div>
-        @if (rateExplanation()) {
-          <div class="rate-explanation">
-            {{ rateExplanation() }}
-          </div>
-        }
-      </div>
-
     }
   </div>
+
+  } <!-- end @else if onboardingDone === true -->
+
 </main>
 
 <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
